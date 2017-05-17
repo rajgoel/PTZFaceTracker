@@ -5,21 +5,21 @@ The application has been developed and tested to work with the [Vstarcam C7837WI
 
 ## Compilation
 
-This code requires [OpenCV](https://github.com/opencv/opencv) and [OpenCV's extra modules](https://github.com/opencv/opencv_contrib). On Linux OpenCV and the tracking module can be made available with
+This code requires [OpenCV](https://github.com/opencv/opencv) and [OpenCV's extra modules](https://github.com/opencv/opencv_contrib). On Linux, OpenCV and the tracking module can be made available with
 
 ```
-	cd <path to opencv-3.2.0> 
-	cmake -D OPENCV_EXTRA_MODULES_PATH=<path toopencv_contrib-3.2.0>/modules/ .
-	make
-	sudo make install
+cd <path to opencv-3.2.0> 
+cmake -D OPENCV_EXTRA_MODULES_PATH=<path toopencv_contrib-3.2.0>/modules/ .
+make
+sudo make install
 ```
 
 The ```PTZFaceTracker``` can be compiled with
 
 
 ```
-	cmake .
-	make
+cmake .
+make
 ```
 
 ## Configuration
@@ -37,24 +37,24 @@ PTZ_STOP 	/decoder_control.cgi?loginuse=<username>&loginpas=<password>&command=1
 ```
 
 The parameters ```IP``` and ```PORT``` give the IP address and port that can be used to control the camera via http. The ```PTZ_*``` parameters should provide the commands to pan and tilt the camera.
-These commands can be identified by analysing the web interface of the camera. For a similar camera this is described in detail in the article [Hack a $30 WiFi Pan-Tilt Camera](http://www.instructables.com/id/Hack-a-30-WiFi-Pan-Tilt-Camera-Video-Audio-and-Mot/). 
-g
-Furthermore, the applications needs the camera video redirected to a standard video device. This can be achieved using [v4l2loopback](https://github.com/umlaeute/v4l2loopback) and Gstreamer. 
+These commands can be identified by analysing the web interface of the camera. For a similar camera, this is described in detail in the article [Hack a $30 WiFi Pan-Tilt Camera](http://www.instructables.com/id/Hack-a-30-WiFi-Pan-Tilt-Camera-Video-Audio-and-Mot/). 
+
+Furthermore, the applications needs the video stream of the camera to be redirected to a standard video device. This can be achieved using [v4l2loopback](https://github.com/umlaeute/v4l2loopback) and Gstreamer. 
 
 ```
-	sudo modprobe v4l2loopback
-	gst-launch -vet  rtspsrc user-id='<udsername>' user-pw='<password>' location='rtsp://10.10.10.10:10554/udp/av0_0' latency=0 ! decodebin2 ! v4l2sink device=/dev/video1
+sudo modprobe v4l2loopback
+gst-launch -vet  rtspsrc user-id='<udsername>' user-pw='<password>' location='rtsp://10.10.10.10:10554/udp/av0_0' latency=0 ! decodebin2 ! v4l2sink device=/dev/video1
 ```
 
-Of course, the IP address and the port used for ```rtsp``` may have to be changed. You should be able to get the correct ```rtsp``` location from the web interface of your camera.
+Of course, the IP address and the port used for ```rtsp``` may have to be changed. You should be able to obtain the correct ```rtsp``` location from the web interface of your camera.
 
 ## Usage
 
 ```
-	./PTZFaceTracker <video device> <config file>
+./PTZFaceTracker <video device> <config file>
 ```
 
-The application automatically tries to detect a face and track it. You can use the left, right, up, down keys to manually pan and tilt the camera. The space bar can be used to stop pan and tilt and to select a different face if multiple faces are detected. With the enter key you can make the application track the selected face.
+The application automatically tries to detect a face and track it. You can use the left, right, up, and down keys to manually pan and tilt the camera. The space bar can be used to stop pan and tilt and to select a different face, if multiple faces are detected. With the enter key you can make the application track the currently selected face.
 
 ## License
 
