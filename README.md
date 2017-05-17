@@ -9,7 +9,7 @@ This code requires [OpenCV](https://github.com/opencv/opencv) and [OpenCV's extr
 
 ```
 cd <path to opencv-3.2.0> 
-cmake -D OPENCV_EXTRA_MODULES_PATH=<path toopencv_contrib-3.2.0>/modules/ .
+cmake -D OPENCV_EXTRA_MODULES_PATH=<path to opencv_contrib-3.2.0>/modules/ .
 make
 sudo make install
 ```
