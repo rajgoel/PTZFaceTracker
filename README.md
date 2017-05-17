@@ -43,7 +43,7 @@ Furthermore, the applications needs the video stream of the camera to be redirec
 
 ```
 sudo modprobe v4l2loopback
-gst-launch -vet  rtspsrc user-id='<udsername>' user-pw='<password>' location='rtsp://10.10.10.10:10554/udp/av0_0' latency=0 ! decodebin2 ! v4l2sink device=/dev/video1
+gst-launch -vet  rtspsrc user-id='<username>' user-pw='<password>' location='rtsp://10.10.10.10:10554/udp/av0_0' latency=0 ! decodebin2 ! v4l2sink device=/dev/video1
 ```
 
 Of course, the IP address and the port used for ```rtsp``` may have to be changed. You should be able to obtain the correct ```rtsp``` location from the web interface of your camera.
