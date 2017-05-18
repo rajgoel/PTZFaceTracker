@@ -192,6 +192,7 @@ int main(int argc, char** argv)
 			break;
 		}
 	} while ( key != 27 ); // Loop until 'ESC' is pressed 
+	ptz.stop();
 
 	return 0;
 }
