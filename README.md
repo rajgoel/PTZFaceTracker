@@ -14,7 +14,7 @@ make
 sudo make install
 ```
 
-The define ```WITH_LIBV4L``` was necessary for to avoid a runtime error when connecting to the camera stream. Some other defines may also be required if above fails, depending on the available libraries and program versions.
+The define ```WITH_LIBV4L``` was necessary to avoid a runtime error when connecting to the camera stream. Some other defines may also be required if above fails, depending on the available libraries and program versions.
 
 The ```PTZFaceTracker``` can be compiled with
 
