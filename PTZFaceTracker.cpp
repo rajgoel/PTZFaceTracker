@@ -89,21 +89,25 @@ int main(int argc, char** argv)
 				// Stop PTZ if position is close to center
 				if ( PTZ_TRACK == PTZController::PTZ_LEFT && x >= 0.3 * width ) {
 					ptz.stop();
+					faceTracker.stopMotion();
 					PTZ_TRACK = PTZController::PTZ_STOP;
 					faceTracker.setLabel("");
 				}
 				else if ( PTZ_TRACK == PTZController::PTZ_RIGHT && x <= 0.7 * width ) {
 					ptz.stop();
+					faceTracker.stopMotion();
 					PTZ_TRACK = PTZController::PTZ_STOP;
 					faceTracker.setLabel("");
 				}
 				else if ( PTZ_TRACK == PTZController::PTZ_UP && y >= 0.4 * height ) {
 					ptz.stop();
+					faceTracker.stopMotion();
 					PTZ_TRACK = PTZController::PTZ_STOP;
 					faceTracker.setLabel("");
 				}
 				else if ( PTZ_TRACK == PTZController::PTZ_DOWN && y <= 0.6 * height ) {
 					ptz.stop();
+					faceTracker.stopMotion();
 					PTZ_TRACK = PTZController::PTZ_STOP;
 					faceTracker.setLabel("");
 				}
@@ -111,21 +115,25 @@ int main(int argc, char** argv)
 				// Start PTZ if position is close to border
 
 				if ( x < 0.2 * width ) {
+					faceTracker.startMotion();
 					ptz.left();
 					PTZ_TRACK = PTZController::PTZ_LEFT;
 					faceTracker.setLabel("Automatic move: LEFT");
 				}
 				else if  ( x > 0.8 * width ) {
+					faceTracker.startMotion();
 					ptz.right();
 					PTZ_TRACK = PTZController::PTZ_RIGHT;
 					faceTracker.setLabel("Automatic move: RIGHT");
 				}
 				else if  ( y < 0.3 * height ) {
+					faceTracker.startMotion();
 					ptz.up();
 					PTZ_TRACK = PTZController::PTZ_UP;
 					faceTracker.setLabel("Automatic move: UP");
 				}
 				else if  ( y > 0.7 * height ) {
+					faceTracker.startMotion();
 					ptz.down();
 					PTZ_TRACK = PTZController::PTZ_DOWN;
 					faceTracker.setLabel("Automatic move: DOWN");
@@ -136,6 +144,7 @@ int main(int argc, char** argv)
 			if ( PTZ_TRACK != PTZController::PTZ_STOP ) {
 				// Stop automatic PTZ if lost
 				ptz.stop();
+				faceTracker.stopMotion();
 				PTZ_TRACK = PTZController::PTZ_STOP;
 				faceTracker.setLabel("");
 			}
@@ -145,6 +154,7 @@ int main(int argc, char** argv)
 		switch (key) {
 		   case 81:   // do something
 //std::cout << "LEFT" << std::endl;
+			faceTracker.startMotion();
 			ptz.left();
 			PTZ_MANUAL = PTZController::PTZ_LEFT;
 			PTZ_TRACK = PTZController::PTZ_STOP;
@@ -152,6 +162,7 @@ int main(int argc, char** argv)
 			break;
 		   case 82:   // do something
 //std::cout << "UP" << std::endl;
+			faceTracker.startMotion();
 			ptz.up();
 			PTZ_MANUAL = PTZController::PTZ_UP;
 			PTZ_TRACK = PTZController::PTZ_STOP;
@@ -159,6 +170,7 @@ int main(int argc, char** argv)
 			break;
 		   case 83:   // do something else
 //std::cout << "RIGHT" << std::endl;
+			faceTracker.startMotion();
 			ptz.right();
 			PTZ_MANUAL = PTZController::PTZ_RIGHT;
 			PTZ_TRACK = PTZController::PTZ_STOP;
@@ -166,6 +178,7 @@ int main(int argc, char** argv)
 			break;
 		   case 84:   // do something
 //std::cout << "DOWN" << std::endl;
+			faceTracker.startMotion();
 			ptz.down();
 			PTZ_MANUAL = PTZController::PTZ_DOWN;
 			PTZ_TRACK = PTZController::PTZ_STOP;
@@ -174,6 +187,7 @@ int main(int argc, char** argv)
 		   case 32:   // SPACE
 //std::cout << "SPACE" << std::endl;
 			ptz.stop();
+			faceTracker.stopMotion();
 			faceTracker.next();
 			PTZ_MANUAL = PTZController::PTZ_STOP;
 			PTZ_TRACK = PTZController::PTZ_STOP;
@@ -182,6 +196,7 @@ int main(int argc, char** argv)
 		   case 10:   // ENTER
 //std::cout << "ENTER" << std::endl;
 			ptz.stop();
+			faceTracker.stopMotion();
 			faceTracker.hookup();
 			PTZ_MANUAL = PTZController::PTZ_STOP;
 			PTZ_TRACK = PTZController::PTZ_STOP;

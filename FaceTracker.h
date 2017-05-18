@@ -5,7 +5,7 @@
 #include <opencv2/objdetect.hpp>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/tracking.hpp>
-//#include <opencv2/videoio.hpp>
+#include <opencv2/videoio.hpp>
 
 #include <string> /* string */
 #include <list> /* list */
@@ -25,6 +25,8 @@ public:
 	void next();
 	void hookup();
 	void setLabel(const string &label);
+	void startMotion();
+	void stopMotion();
 private:
 	FaceTracker();
 	cv::VideoCapture camera;
@@ -42,5 +44,8 @@ private:
 	cv::Rect2d position;
 	cv::Point target;
 	double dist(int x1, int y1, int x2, int y2);
+
+	bool MOTION;
+	cv::Mat lastMatch;
 };
 
