@@ -46,6 +46,7 @@ private:
 	double dist(int x1, int y1, int x2, int y2);
 
 	bool MOTION;
+	cv::Mat firstMatch;
 	cv::Mat lastMatch;
 };
 

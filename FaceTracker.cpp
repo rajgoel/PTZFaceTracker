@@ -71,6 +71,8 @@ void FaceTracker::stopMotion() {
 
 bool FaceTracker::update() {
 	camera >> frame;
+	cv::Mat display;
+	copyMakeBorder( frame, display, 0, 60, 0, 0, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0) );
 
 	cv::Mat frame_gray;
 
@@ -94,31 +96,96 @@ bool FaceTracker::update() {
 		}
 	}
 
-	if ( faces.size() && LOST ) {
+	bool MATCH = false;
+	if ( faces.size() && firstMatch.cols > 0 && firstMatch.rows > 0 ) {
+		// try to focus on face matching the first face
+		for( size_t i = 0; i < faces.size(); i++ ) {
+			cv::Mat result;
+			cv::matchTemplate(frame(faces[i]), firstMatch, result, cv::TM_CCOEFF_NORMED);
+			double minVal, maxVal; 
+			cv::Point minLoc, maxLoc;
+			cv::minMaxLoc( result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
+			if ( maxVal > 0.5 ) {
+				// re-initialize the tracker to the matching face
+				tracker = cv::Tracker::create( "KCF" );
+				tracker->init(frame,faces[i]);
+
+				// update tracking position
+	    			position = cv::Rect2d(faces[i]);
+
+				// update last match if full match is visible
+				if ( position.x >= 0 && position.x + position.width <= frame.cols && position.y >= 0 && position.y + position.height <= frame.rows ) {
+					lastMatch = frame(position).clone();
+				}
+				MATCH = true;
+				LOST = false;
+				// show matched face
+				cv::rectangle( display, position, cv::Scalar( 255, 255, 0 ), 2, 1 );
+			}
+		}
+	}
+/*
+	if ( faces.size() && !MATCH && LOST ) {
+		// automatically hookup to selected face if lost
 		hookup();
 	}
-
-	if ( !LOST ) {
-		if ( MOTION && lastMatch.cols > 0 && lastMatch.rows > 0) {
-			// use last match to update position
+*/
+	if ( !MATCH && LOST ) {
+		if ( lastMatch.cols > 0 && lastMatch.rows > 0) {
+			// use last match to find face again
 			cv::Mat result;
-			cv::matchTemplate(frame, lastMatch, result, CV_TM_SQDIFF_NORMED);
-// cv::normalize( result, result, 0, 1, NORM_MINMAX, -1, Mat() );
+			cv::matchTemplate(frame, lastMatch, result, cv::TM_CCOEFF_NORMED);
 
 			/// localize the best match with minMaxLoc
 			double minVal, maxVal; 
 			cv::Point minLoc, maxLoc;
 			cv::minMaxLoc( result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
-			// update tracking position
-    			position = cv::Rect2d(minLoc.x, minLoc.y, lastMatch.cols, lastMatch.rows);
 
-			// update last match if full match is visible
-			if ( position.x >= 0 && position.x + position.width <= frame.cols && position.y >= 0 && position.y + position.height <= frame.rows ) {
-				lastMatch = frame(position).clone();
+			if ( maxVal > 0.75 ) {
+				// update tracking position if match is good
+   				position = cv::Rect2d(maxLoc.x, maxLoc.y, lastMatch.cols, lastMatch.rows);
+			
+				// update last match if match is inside frame
+				if ( position.x > 0 && position.x + position.width < frame.cols && position.y > 0 && position.y + position.height < frame.rows ) {
+					lastMatch = frame(position).clone();
+					// show matched face
+					cv::rectangle( display, position, cv::Scalar( 255, 127, 0 ), 2, 1 );
+					// initialize the tracker to the matching face
+					tracker = cv::Tracker::create( "KCF" );
+					tracker->init(frame,position);
+					LOST = false; 
+				}
 			}
+		}
+	}
+	else if ( !MATCH && !LOST ) {
+		if ( MOTION && lastMatch.cols > 0 && lastMatch.rows > 0) {
+			// use last match to update position
+			cv::Mat result;
+			cv::matchTemplate(frame, lastMatch, result, cv::TM_CCOEFF_NORMED);
 
-			// show matched face
-			cv::rectangle( frame, position, cv::Scalar( 255, 255, 0 ), 2, 1 );
+			/// localize the best match with minMaxLoc
+			double minVal, maxVal; 
+			cv::Point minLoc, maxLoc;
+			cv::minMaxLoc( result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
+
+			if ( maxVal > 0.75 ) {
+				// update tracking position if match is good
+   				position = cv::Rect2d(maxLoc.x, maxLoc.y, lastMatch.cols, lastMatch.rows);
+			
+				// update last match if match is inside frame
+				if ( position.x > 0 && position.x + position.width < frame.cols && position.y > 0 && position.y + position.height < frame.rows ) {
+					lastMatch = frame(position).clone();
+					// show matched face
+					cv::rectangle( display, position, cv::Scalar( 255, 127, 0 ), 2, 1 );
+					// initialize the tracker to the matching face
+					tracker = cv::Tracker::create( "KCF" );
+					tracker->init(frame,position);
+				}
+			} 
+			else { 
+				LOST = true; 
+			}
 		}
 		else {
 			// update the tracking result
@@ -131,7 +198,7 @@ bool FaceTracker::update() {
 			// draw the tracked object
 			if ( position.x + position.width > 0 && position.x < frame.cols && position.y + position.height > 0 && position.y < frame.rows ) {
 				// tracked object is still on the video
-				cv::rectangle( frame, position, cv::Scalar( 255, 0, 0 ), 2, 1 );
+				cv::rectangle( display, position, cv::Scalar( 255, 0, 0 ), 2, 1 );
 			}
 			else {
 				LOST = true;
@@ -139,21 +206,29 @@ bool FaceTracker::update() {
 		}
 	}
 
-	// Iterate over all of the faces
 	for( size_t i = 0; i < faces.size(); i++ ) {
 		// Find center of face
 		cv::Point center(faces[i].x + faces[i].width/2, faces[i].y + faces[i].height/2);
 		// Draw green ellipse around selected face and red ellipse around all other faces
-		ellipse(frame, center, cv::Size(faces[i].width/2, faces[i].height/2), 0, 0, 360, (i == selected) ? cv::Scalar( 0, 255, 0 ) : cv::Scalar( 0, 0, 255 ), 4, 8, 0 );
+		ellipse(display, center, cv::Size(faces[i].width/2, faces[i].height/2), 0, 0, 360, (i == selected) ? cv::Scalar( 0, 255, 0 ) : cv::Scalar( 0, 0, 255 ), 4, 8, 0 );
 	}
 
-	cv::Point pos(0, 20);
-	putText(frame, label, pos, cv::FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(255, 255, 255), 1); 
 
 	// Display frame
-	cv::imshow( window_name, frame );
+	if ( firstMatch.cols > 0 && firstMatch.rows > 0) {
+		cv::Mat inlay;
+		cv::resize(firstMatch, inlay, cv::Size( (int)(60), (int)(60) ) );
+		inlay.copyTo(display(cv::Rect(width-60, height, 60, 60)));
+	}
+	if ( lastMatch.cols > 0 && lastMatch.rows > 0) {
+		cv::Mat inlay;
+		cv::resize(lastMatch, inlay, cv::Size( (int)(60), (int)(60) ) );
+		inlay.copyTo(display(cv::Rect(width-120, height, 60, 60)));
+	}
 
-	if ( lastMatch.cols > 0 && lastMatch.rows > 0 ) cv::imshow( "Template", lastMatch );
+	cv::Point pos(30, height + 36);
+	putText(display, label, pos, cv::FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(255, 255, 255), 1); 
+	cv::imshow( window_name, display );
 
 	return !LOST;
 }
@@ -171,6 +246,11 @@ void FaceTracker::next() {
 
 void FaceTracker::hookup() {
 	if ( selected < faces.size() ) {
+		// update last match if full match is visible
+		if ( faces[selected].x >= 0 && faces[selected].x + faces[selected].width <= frame.cols && faces[selected].y >= 0 && faces[selected].y + faces[selected].height <= frame.rows ) {
+			cv::Rect face = cv::Rect(faces[selected].x + faces[selected].width/6, faces[selected].y + faces[selected].height/6, faces[selected].width/1.5, faces[selected].height/1.5 );
+			firstMatch = frame(face).clone();
+		}
 		// initialize the tracker to the selected face
 		tracker = cv::Tracker::create( "KCF" );
 		tracker->init(frame,faces[selected]);
