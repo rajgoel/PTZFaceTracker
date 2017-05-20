@@ -1,6 +1,7 @@
 #include "opencv2/highgui.hpp" /* cv::waitKey */
 #include <iostream>
 #include <fstream>
+#include <stdio.h> /* itoa */
 
 #include "FaceTracker.h"
 #include "PTZController.h"
@@ -12,11 +13,10 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	if ( argc < 3 ) {
-		cerr << "Usage: " << argv[0] << " <video device> <config file>" << endl;
+		cerr << "Usage: " << argv[0] << " <video source> <config file>" << endl;
 		exit(0);
 	}
 
-	int device = atoi(argv[1]);
 	string IP;
 	int port;
 	string command[5];
@@ -67,7 +67,8 @@ int main(int argc, char** argv)
 		exit(0);
 	}
 
-	FaceTracker faceTracker = FaceTracker(device);
+	FaceTracker faceTracker = FaceTracker( argv[1] );
+
 	int width, height;
 	faceTracker.getDimensions(width, height);
 

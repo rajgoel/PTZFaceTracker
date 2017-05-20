@@ -17,7 +17,6 @@ using namespace std;
 class FaceTracker
 {
 public:
-	FaceTracker(int device);
 	FaceTracker(string video);
 	bool update();
 	void getDimensions(int &width, int &height);

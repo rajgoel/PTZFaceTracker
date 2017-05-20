@@ -13,22 +13,15 @@ FaceTracker::FaceTracker() {
 	selected = 0;
 }
 
-FaceTracker::FaceTracker(int device) {
-	*this = FaceTracker();
-	camera = cv::VideoCapture(device);
-	if (!camera.isOpened()) {
-		throw runtime_error("Cannot open camera");
-	}
-	camera >> frame;
-	width = frame.cols;
-	height = frame.rows;
-	target.x = width/2;
-	target.y = height/2;
-}
-
 FaceTracker::FaceTracker(string video) {
 	*this = FaceTracker();
-	camera = cv::VideoCapture(video);
+	if ( to_string( atoi( video.c_str() ) ) == video ) {
+		// if argument is a device number
+		camera = cv::VideoCapture( atoi( video.c_str() ) );
+	}
+	else {
+		camera = cv::VideoCapture( video );
+	}	
 	if (!camera.isOpened()) {
 		throw runtime_error("Cannot open video");
 	}
