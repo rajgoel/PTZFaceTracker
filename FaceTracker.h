@@ -11,13 +11,21 @@
 #include <list> /* list */
 #include <iostream> /* cout, cerr, endl */
 
+#ifdef LOG
+ #include <iomanip>      // std::put_time
+ #include <ctime>        // std::time_t, struct std::tm, std::localtime
+ #include <chrono>       // std::chrono::system_clock
+ #include <fstream>       // std::fstream
+#endif
+
 
 using namespace std;
 
 class FaceTracker
 {
 public:
-	FaceTracker(string video);
+	FaceTracker(string source);
+	~FaceTracker();
 	bool update();
 	void getDimensions(int &width, int &height);
 	void getPosition(int &x, int &y);
@@ -47,5 +55,14 @@ private:
 	bool MOTION;
 	cv::Mat firstMatch;
 	cv::Mat lastMatch;
+
+#ifdef LOG
+	chrono::time_point<chrono::system_clock> start;
+	chrono::milliseconds duration;
+	string filename;
+	cv::VideoWriter video;
+	ofstream* logfile;
+#endif
+
 };
 

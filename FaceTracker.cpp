@@ -2,7 +2,6 @@
 #include <stdexcept> /* runtime_error */
 #include <math.h> /* sqrt, pow */
 
-
 FaceTracker::FaceTracker() {
 	window_name = "Face Tracker";
 	if ( !face_cascade.load("haarcascade_frontalface_alt.xml") ) {
@@ -11,16 +10,31 @@ FaceTracker::FaceTracker() {
 	LOST = true;
 	MOTION = false;
 	selected = 0;
+
+#ifdef LOG
+	start = chrono::system_clock::now();
+	time_t tt = chrono::system_clock::to_time_t(start);
+	tm local_tm = *localtime(&tt);
+	filename = ((string)"PTZ_") + to_string(local_tm.tm_year + 1900) + "-" 
+		+ string(local_tm.tm_mon+1 < 10 ? 1 : 0, '0') + to_string(local_tm.tm_mon+1) + "-" 
+		+ string(local_tm.tm_mday < 10 ? 1 : 0, '0') + to_string(local_tm.tm_mday) + "_" 
+		+ string(local_tm.tm_hour < 10 ? 1 : 0, '0') + to_string(local_tm.tm_hour) + "-" 
+		+ string(local_tm.tm_min < 10 ? 1 : 0, '0') + to_string(local_tm.tm_min) ;
+	setLabel( filename );
+	logfile = new ofstream( filename+".log" );
+	(*logfile) << "TIME, STATUS, X, Y, WIDTH, HEIGHT" << endl;
+
+#endif
 }
 
-FaceTracker::FaceTracker(string video) {
+FaceTracker::FaceTracker(string source) {
 	*this = FaceTracker();
-	if ( to_string( atoi( video.c_str() ) ) == video ) {
+	if ( to_string( atoi( source.c_str() ) ) == source ) {
 		// if argument is a device number
-		camera = cv::VideoCapture( atoi( video.c_str() ) );
+		camera = cv::VideoCapture( atoi( source.c_str() ) );
 	}
 	else {
-		camera = cv::VideoCapture( video );
+		camera = cv::VideoCapture( source );
 	}	
 	if (!camera.isOpened()) {
 		throw runtime_error("Cannot open video");
@@ -30,6 +44,19 @@ FaceTracker::FaceTracker(string video) {
 	height = frame.rows;
 	target.x = width/2;
 	target.y = height/2;
+
+#ifdef LOG
+	video = cv::VideoWriter(filename + ".avi",CV_FOURCC('M','J','P','G'),10, cv::Size(width,height+60),true);
+#endif
+}
+
+FaceTracker::~FaceTracker() {
+	camera.release();
+#ifdef LOG
+	video.release();
+//	logfile->close();
+//	delete logfile;
+#endif
 }
 
 void FaceTracker::getDimensions(int &width, int &height) {
@@ -89,6 +116,10 @@ bool FaceTracker::update() {
 		}
 	}
 
+#ifdef LOG
+	duration = chrono::duration_cast< chrono::milliseconds >( chrono::system_clock::now() - start );
+#endif
+
 	bool MATCH = false;
 	if ( faces.size() && firstMatch.cols > 0 && firstMatch.rows > 0 ) {
 		// try to focus on face matching the first face
@@ -114,6 +145,10 @@ bool FaceTracker::update() {
 				LOST = false;
 				// show matched face
 				cv::rectangle( display, position, cv::Scalar( 255, 255, 0 ), 2, 1 );
+#ifdef LOG
+	(*logfile) << (double)duration.count() / 1000 << ", " << "FACEMATCH" << ", " << position.x << ", " << position.y << ", " << position.width << ", " << position.height << endl;
+#endif
+
 			}
 		}
 	}
@@ -147,6 +182,9 @@ bool FaceTracker::update() {
 					tracker = cv::Tracker::create( "KCF" );
 					tracker->init(frame,position);
 					LOST = false; 
+#ifdef LOG
+	(*logfile) << (double)duration.count() / 1000 << ", " << "TEMPLATEMATCH" << ", " << position.x << ", " << position.y << ", " << position.width << ", " << position.height << endl;
+#endif
 				}
 			}
 		}
@@ -174,10 +212,16 @@ bool FaceTracker::update() {
 					// initialize the tracker to the matching face
 					tracker = cv::Tracker::create( "KCF" );
 					tracker->init(frame,position);
+#ifdef LOG
+	(*logfile) << (double)duration.count() / 1000 << ", " << "MOTIONMATCH" << ", " << position.x << ", " << position.y << ", " << position.width << ", " << position.height << endl;
+#endif
 				}
 			} 
 			else { 
 				LOST = true; 
+#ifdef LOG
+	(*logfile) << (double)duration.count() / 1000 << ", " << "LOST" << ", , , " << endl;
+#endif
 			}
 		}
 		else {
@@ -192,12 +236,19 @@ bool FaceTracker::update() {
 			if ( position.x + position.width > 0 && position.x < frame.cols && position.y + position.height > 0 && position.y < frame.rows ) {
 				// tracked object is still on the video
 				cv::rectangle( display, position, cv::Scalar( 255, 0, 0 ), 2, 1 );
+#ifdef LOG
+	(*logfile) << (double)duration.count() / 1000 << ", " << "TRACK" << ", " << position.x << ", " << position.y << ", " << position.width << ", " << position.height << endl;
+#endif
 			}
 			else {
 				LOST = true;
+#ifdef LOG
+	(*logfile) << (double)duration.count() / 1000 << ", " << "LOST" << ", , , " << endl;
+#endif
 			}
 		}
 	}
+
 
 	for( size_t i = 0; i < faces.size(); i++ ) {
 		// Find center of face
@@ -222,6 +273,9 @@ bool FaceTracker::update() {
 	cv::Point pos(30, height + 36);
 	putText(display, label, pos, cv::FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(255, 255, 255), 1); 
 	cv::imshow( window_name, display );
+#ifdef LOG
+	video.write(display);
+#endif
 
 	return !LOST;
 }

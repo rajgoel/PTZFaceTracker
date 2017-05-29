@@ -1,7 +1,6 @@
 #include "opencv2/highgui.hpp" /* cv::waitKey */
 #include <iostream>
 #include <fstream>
-#include <stdio.h> /* itoa */
 
 #include "FaceTracker.h"
 #include "PTZController.h"
