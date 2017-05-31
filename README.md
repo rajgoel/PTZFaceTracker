@@ -9,12 +9,12 @@ This code requires [OpenCV](https://github.com/opencv/opencv) and [OpenCV's extr
 
 ```
 cd <path to opencv-3.2.0> 
-cmake -D OPENCV_EXTRA_MODULES_PATH=<path to opencv_contrib-3.2.0>/modules/ -D WITH_LIBV4L .
+cmake -D OPENCV_EXTRA_MODULES_PATH=<path to opencv_contrib-3.2.0>/modules/ -D WITH_LIBV4L=ON .
 make
 sudo make install
 ```
 
-The define ```WITH_LIBV4L``` was necessary to avoid a runtime error when connecting to the camera stream. Some other defines may also be required if above fails, depending on the available libraries and program versions.
+The define ```WITH_LIBV4L=ON``` was necessary to avoid a runtime error when connecting to the camera stream. Some other defines may also be required if above fails, depending on the available libraries and program versions.
 
 The ```PTZFaceTracker``` can be compiled with
 
